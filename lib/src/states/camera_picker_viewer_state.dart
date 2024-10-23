@@ -78,6 +78,7 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
       hasLoaded = true;
       if (pickerConfig.shouldAutoPreviewVideo) {
         player.play();
+        videoControllerListener();
         player.setPlaylistMode(PlaylistMode.single);
       }
     } catch (e, s) {
@@ -107,11 +108,13 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
     try {
       if (isPlaying.value) {
         player.pause();
+        videoControllerListener();
       } else {
         if (player.stream.position == player.stream.duration) {
           player.seek(Duration.zero);
         }
         player.play();
+        videoControllerListener();
       }
     } catch (e, s) {
       handleErrorWithHandler(e, s, onError);
@@ -258,11 +261,11 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
       builder = Stack(
         children: <Widget>[
           Center(
-            child: AspectRatio(
-              aspectRatio: player.state.width!.toDouble() /
-                  player.state.height!.toDouble(),
-              child: Video(controller: videoController),
-            ),
+            // child: AspectRatio(
+            //   aspectRatio: player.state.width!.toDouble() /
+            //       player.state.height!.toDouble(),
+            child: Video(controller: videoController),
+            // ),
           ),
           buildPlayControlButton(context),
         ],
