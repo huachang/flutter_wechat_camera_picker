@@ -45,6 +45,10 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   /// 播放控制器是否在播放
   bool get isControllerPlaying => player.state.playing;
 
+  /// Subscription for the playing state of the video player.
+  /// 播放器播放状态的订阅
+  StreamSubscription<bool>? playingSubscription;
+
   /// Whether the controller has initialized.
   /// 控制器是否已初始化
   late bool hasLoaded = widget.viewType == CameraPickerViewType.image;
@@ -68,20 +72,26 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
 
   @override
   void dispose() {
+    playingSubscription?.cancel();
     player.dispose();
     super.dispose();
   }
 
   Future<void> initializeMediaKitPlayer() async {
     try {
-      await player.open(Media(previewFile.path));
-      hasLoaded = true;
-      if (pickerConfig.shouldAutoPreviewVideo) {
-        player.play();
-        videoControllerListener();
-        // disable repeat mode
-        player.setPlaylistMode(PlaylistMode.single);
-      }
+      hasLoaded = false;
+      player.setPlaylistMode(PlaylistMode.none);
+      player.open(Media(previewFile.path), play: false).then((_) {
+        hasLoaded = true;
+        safeSetState(() {});
+        if (pickerConfig.shouldAutoPreviewVideo) {
+          player.play();
+          // isPlaying.value = true;
+          // videoControllerListener();
+          playingSubscription =
+              player.stream.playing.listen(videoControllerListener);
+        }
+      });
     } catch (e, s) {
       hasErrorWhenInitializing = true;
       realDebugPrint('Error when initializing media kit player: $e');
@@ -93,9 +103,9 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
 
   /// Listener for the video player.
   /// 播放器的监听方法
-  void videoControllerListener() {
-    if (isControllerPlaying != isPlaying.value) {
-      isPlaying.value = isControllerPlaying;
+  void videoControllerListener(bool playing) async {
+    if (playing != isPlaying.value) {
+      isPlaying.value = playing;
     }
   }
 
@@ -109,13 +119,15 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
     try {
       if (isPlaying.value) {
         player.pause();
-        videoControllerListener();
+        // videoControllerListener();
       } else {
         if (player.stream.position == player.stream.duration) {
           player.seek(Duration.zero);
         }
         player.play();
-        videoControllerListener();
+        playingSubscription ??=
+            player.stream.playing.listen(videoControllerListener);
+        // videoControllerListener();
       }
     } catch (e, s) {
       handleErrorWithHandler(e, s, onError);
