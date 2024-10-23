@@ -8,7 +8,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:path/path.dart' as path;
-import 'package:video_player/video_player.dart';
+// import 'package:video_player/video_player.dart';
 import 'package:wechat_picker_library/wechat_picker_library.dart';
 
 import '../constants/config.dart';
@@ -35,11 +35,11 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
 
   /// Controller for the video player.
   /// 视频播放的控制器
-  late final videoController = VideoPlayerController.file(previewFile);
+  // late final videoController = VideoPlayerController.file(previewFile);
 
   /// Whether the controller is playing.
   /// 播放控制器是否在播放
-  bool get isControllerPlaying => videoController.value.isPlaying;
+  // bool get isControllerPlaying => videoController.value.isPlaying;
 
   /// Whether the controller has initialized.
   /// 控制器是否已初始化
@@ -64,22 +64,22 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
 
   @override
   void dispose() {
-    videoController
-      ..removeListener(videoControllerListener)
-      ..pause()
-      ..dispose();
+    // videoController
+    //   ..removeListener(videoControllerListener)
+    //   ..pause()
+    //   ..dispose();
     super.dispose();
   }
 
   Future<void> initializeVideoPlayerController() async {
     try {
-      await videoController.initialize();
-      videoController.addListener(videoControllerListener);
+      // await videoController.initialize();
+      // videoController.addListener(videoControllerListener);
       hasLoaded = true;
-      if (pickerConfig.shouldAutoPreviewVideo) {
-        videoController.play();
-        videoController.setLooping(true);
-      }
+      // if (pickerConfig.shouldAutoPreviewVideo) {
+      //   videoController.play();
+      //   videoController.setLooping(true);
+      // }
     } catch (e, s) {
       hasErrorWhenInitializing = true;
       realDebugPrint('Error when initializing video controller: $e');
@@ -92,9 +92,9 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   /// Listener for the video player.
   /// 播放器的监听方法
   void videoControllerListener() {
-    if (isControllerPlaying != isPlaying.value) {
-      isPlaying.value = isControllerPlaying;
-    }
+    // if (isControllerPlaying != isPlaying.value) {
+    //   isPlaying.value = isControllerPlaying;
+    // }
   }
 
   /// Callback for the play button.
@@ -106,14 +106,14 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   Future<void> playButtonCallback() async {
     try {
       if (isPlaying.value) {
-        videoController.pause();
+        // videoController.pause();
       } else {
-        if (videoController.value.duration == videoController.value.position) {
-          videoController.seekTo(Duration.zero);
-        }
-        videoController
-          ..play()
-          ..setLooping(true);
+        // if (videoController.value.duration == videoController.value.position) {
+        //   videoController.seekTo(Duration.zero);
+        // }
+        // videoController
+        //   ..play()
+        //   ..setLooping(true);
       }
     } catch (e, s) {
       handleErrorWithHandler(e, s, onError);
@@ -260,11 +260,11 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
       builder = Stack(
         children: <Widget>[
           Center(
-            child: AspectRatio(
-              aspectRatio: videoController.value.aspectRatio,
-              child: VideoPlayer(videoController),
-            ),
-          ),
+              // child: AspectRatio(
+              //   aspectRatio: videoController.value.aspectRatio,
+              //   child: VideoPlayer(videoController),
+              // ),
+              ),
           buildPlayControlButton(context),
         ],
       );
