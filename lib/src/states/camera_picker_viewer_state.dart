@@ -79,7 +79,8 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
       if (pickerConfig.shouldAutoPreviewVideo) {
         player.play();
         videoControllerListener();
-        player.setPlaylistMode(PlaylistMode.single);
+        // disable repeat mode
+        player.setPlaylistMode(PlaylistMode.none);
       }
     } catch (e, s) {
       hasErrorWhenInitializing = true;
