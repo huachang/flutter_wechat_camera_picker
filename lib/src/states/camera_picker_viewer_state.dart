@@ -8,7 +8,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:path/path.dart' as path;
-// import 'package:video_player/video_player.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:wechat_picker_library/wechat_picker_library.dart';
 
 import '../constants/config.dart';
@@ -33,13 +34,16 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   /// 通过 [previewXFile] 构建 [File] 实例。
   late final previewFile = File(widget.previewXFile.path);
 
-  /// Controller for the video player.
+  /// Controller for media_kit.
   /// 视频播放的控制器
-  // late final videoController = VideoPlayerController.file(previewFile);
+  // replace videoController with MediaKit VideoController
+  // 使用 MediaKit 替换 VideoPlayerController
+  late final player = Player();
+  late final videoController = VideoController(player);
 
   /// Whether the controller is playing.
   /// 播放控制器是否在播放
-  // bool get isControllerPlaying => videoController.value.isPlaying;
+  bool get isControllerPlaying => player.state.playing;
 
   /// Whether the controller has initialized.
   /// 控制器是否已初始化
@@ -58,31 +62,27 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   void initState() {
     super.initState();
     if (widget.viewType == CameraPickerViewType.video) {
-      initializeVideoPlayerController();
+      initializeMediaKitPlayer();
     }
   }
 
   @override
   void dispose() {
-    // videoController
-    //   ..removeListener(videoControllerListener)
-    //   ..pause()
-    //   ..dispose();
+    player.dispose();
     super.dispose();
   }
 
-  Future<void> initializeVideoPlayerController() async {
+  Future<void> initializeMediaKitPlayer() async {
     try {
-      // await videoController.initialize();
-      // videoController.addListener(videoControllerListener);
+      await player.open(Media(previewFile.path));
       hasLoaded = true;
-      // if (pickerConfig.shouldAutoPreviewVideo) {
-      //   videoController.play();
-      //   videoController.setLooping(true);
-      // }
+      if (pickerConfig.shouldAutoPreviewVideo) {
+        player.play();
+        player.setPlaylistMode(PlaylistMode.single);
+      }
     } catch (e, s) {
       hasErrorWhenInitializing = true;
-      realDebugPrint('Error when initializing video controller: $e');
+      realDebugPrint('Error when initializing media kit player: $e');
       handleErrorWithHandler(e, s, onError);
     } finally {
       safeSetState(() {});
@@ -92,9 +92,9 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   /// Listener for the video player.
   /// 播放器的监听方法
   void videoControllerListener() {
-    // if (isControllerPlaying != isPlaying.value) {
-    //   isPlaying.value = isControllerPlaying;
-    // }
+    if (isControllerPlaying != isPlaying.value) {
+      isPlaying.value = isControllerPlaying;
+    }
   }
 
   /// Callback for the play button.
@@ -106,14 +106,12 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   Future<void> playButtonCallback() async {
     try {
       if (isPlaying.value) {
-        // videoController.pause();
+        player.pause();
       } else {
-        // if (videoController.value.duration == videoController.value.position) {
-        //   videoController.seekTo(Duration.zero);
-        // }
-        // videoController
-        //   ..play()
-        //   ..setLooping(true);
+        if (player.stream.position == player.stream.duration) {
+          player.seek(Duration.zero);
+        }
+        player.play();
       }
     } catch (e, s) {
       handleErrorWithHandler(e, s, onError);
@@ -260,11 +258,12 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
       builder = Stack(
         children: <Widget>[
           Center(
-              // child: AspectRatio(
-              //   aspectRatio: videoController.value.aspectRatio,
-              //   child: VideoPlayer(videoController),
-              // ),
-              ),
+            child: AspectRatio(
+              aspectRatio: player.state.width!.toDouble() /
+                  player.state.height!.toDouble(),
+              child: Video(controller: videoController),
+            ),
+          ),
           buildPlayControlButton(context),
         ],
       );
