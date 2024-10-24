@@ -38,12 +38,12 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   /// 视频播放的控制器
   // replace videoController with MediaKit VideoController
   // 使用 MediaKit 替换 VideoPlayerController
-  late final player = Player();
-  late final videoController = VideoController(player);
+  late Player? player;
+  late VideoController? videoController;
 
   /// Whether the controller is playing.
   /// 播放控制器是否在播放
-  bool get isControllerPlaying => player.state.playing;
+  // bool get isControllerPlaying => player.state.playing;
 
   /// Subscription for the playing state of the video player.
   /// 播放器播放状态的订阅
@@ -73,23 +73,26 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   @override
   void dispose() {
     playingSubscription?.cancel();
-    player.dispose();
+    player?.dispose();
     super.dispose();
   }
 
   Future<void> initializeMediaKitPlayer() async {
+    MediaKit.ensureInitialized();
     try {
       hasLoaded = false;
-      player.setPlaylistMode(PlaylistMode.none);
-      player.open(Media(previewFile.path), play: false).then((_) {
+      player = Player();
+      videoController = VideoController(player!);
+      player!.setPlaylistMode(PlaylistMode.none);
+      player!.open(Media(previewFile.path), play: false).then((_) {
         hasLoaded = true;
         safeSetState(() {});
         if (pickerConfig.shouldAutoPreviewVideo) {
-          player.play();
+          player!.play();
           // isPlaying.value = true;
           // videoControllerListener();
           playingSubscription =
-              player.stream.playing.listen(videoControllerListener);
+              player!.stream.playing.listen(videoControllerListener);
         }
       });
     } catch (e, s) {
@@ -118,15 +121,15 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
   Future<void> playButtonCallback() async {
     try {
       if (isPlaying.value) {
-        player.pause();
+        player!.pause();
         // videoControllerListener();
       } else {
-        if (player.stream.position == player.stream.duration) {
-          player.seek(Duration.zero);
+        if (player!.stream.position == player!.stream.duration) {
+          player!.seek(Duration.zero);
         }
-        player.play();
+        player!.play();
         playingSubscription ??=
-            player.stream.playing.listen(videoControllerListener);
+            player!.stream.playing.listen(videoControllerListener);
         // videoControllerListener();
       }
     } catch (e, s) {
@@ -277,7 +280,7 @@ class CameraPickerViewerState extends State<CameraPickerViewer> {
             // child: AspectRatio(
             //   aspectRatio: player.state.width!.toDouble() /
             //       player.state.height!.toDouble(),
-            child: Video(controller: videoController),
+            child: Video(controller: videoController!),
             // ),
           ),
           buildPlayControlButton(context),
