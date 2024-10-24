@@ -1051,6 +1051,7 @@ class CameraPickerState extends State<CameraPicker>
       lastShootingButtonPressedPosition = null;
     });
     try {
+      recordCountdownTimer?.cancel();
       final XFile file = await controller.stopVideoRecording();
       if (recordStopwatch.elapsed < minimumRecordingDuration) {
         pickerConfig.onMinimumRecordDurationNotMet?.call();
@@ -1064,7 +1065,6 @@ class CameraPickerState extends State<CameraPicker>
       if (isCapturedFileHandled ?? false) {
         return;
       }
-      recordCountdownTimer?.cancel();
       final AssetEntity? entity = await pushToViewer(
         file: file,
         viewType: CameraPickerViewType.video,
