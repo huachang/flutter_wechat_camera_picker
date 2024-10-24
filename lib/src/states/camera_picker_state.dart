@@ -1064,6 +1064,7 @@ class CameraPickerState extends State<CameraPicker>
       if (isCapturedFileHandled ?? false) {
         return;
       }
+      recordCountdownTimer?.cancel();
       final AssetEntity? entity = await pushToViewer(
         file: file,
         viewType: CameraPickerViewType.video,
